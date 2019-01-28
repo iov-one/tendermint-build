@@ -16,8 +16,8 @@ go:
 
 env:
   - GORACE="halt_on_error=1"
-    SOURCE_VERSION=$(source ./build-version.txt | echo SOURCE_VERSION)
-    SOURCE_REPO=$(source ./build-version.txt | echo SOURCE_REPO)
+    SOURCE_VERSION=$(source ./build-version.txt && echo -n $SOURCE_VERSION)
+    SOURCE_REPO=$(source ./build-version.txt && echo -n $SOURCE_REPO)
     BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10)
 
 script:
