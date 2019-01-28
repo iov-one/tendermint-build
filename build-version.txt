@@ -1,0 +1,2 @@
+SOURCE_VERSION=tags/v0.29.1
+SOURCE_REPO=github.com/tendermint/tendermint
