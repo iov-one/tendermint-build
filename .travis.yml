@@ -18,12 +18,13 @@ go:
   - tip # Go version is defined by the build container in the Dockerfile
 
 env:
-  - GORACE="halt_on_error=1"
-    BUILD_TAG=$(source ./build-version.txt && echo -n $BUILD_TAG)
-    BUILD_COMMIT=$(source ./build-version.txt && echo -n $BUILD_COMMIT)
-    IMAGE_NAME="iov1/tendermint:${BUILD_TAG}"
-    BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10) # random id
-    VERSION=$(echo $BUILD_TAG | sed 's/^v//')
+  global:
+    - GORACE="halt_on_error=1"
+    - BUILD_TAG=$(source ./build-version.txt && echo -n $BUILD_TAG)
+    - BUILD_COMMIT=$(source ./build-version.txt && echo -n $BUILD_COMMIT)
+    - IMAGE_NAME="iov1/tendermint:${BUILD_TAG}"
+    - BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10) # random id
+    - VERSION=$(echo $BUILD_TAG | sed 's/^v//')
 
 script:
 - set -eo pipefail
@@ -52,7 +53,7 @@ script:
     fi;
   fi;
 
-  notifications:
+notifications:
   email: false
 
 # whitelist long living branches to avoid testing feature branches twice (as branch and as pull request)
