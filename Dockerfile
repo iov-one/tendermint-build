@@ -1,26 +1,6 @@
-# Run container via:
-# docker build --no-cache -t v0.29.1 --build-arg source_version=v0.29.1 --build-arg source_repo=github.com/tendermint/tendermint .
-FROM golang:1.10.3-alpine AS build-env
-
-ARG source_repo
-ARG source_version
-RUN apk add --no-cache make git bash
-
-RUN go get -u ${source_repo}/...
-WORKDIR /go/src/github.com/tendermint/tendermint
-
-RUN git fetch --tags ; git checkout ${source_version} -b build; \
-    git clean -fd
-
-RUN make get_tools && \
-    make get_vendor_deps && \
-    make build
-
-# -----------------------------------------------------------------------------------
-# Final image
 FROM alpine:3.8
 
-COPY --from=build-env /go/src/github.com/tendermint/tendermint/build/tendermint /bin/tendermint
+ADD tendermint /bin/tendermint
 
 # Tendermint will be looking for genesis file in /tendermint (unless you change
 # `genesis_file` in config.toml). You can put your config.toml and private

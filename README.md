@@ -1,15 +1,15 @@
 ## Tendermint-build container
 Containerized build environemnt to create the docker artifact: 
 https://hub.docker.com/r/iov1/tendermint
-
 ### Development
-
+* Build local binary
+```sh
+./contrib/gitian-build.sh linux
 ```
-docker build --pull --no-cache -t v0.29.1 --build-arg source_version=v0.29.1 --build-arg source_repo=github.com/tendermint/tendermint .
+* Build and Sign
+```sh
+./contrib/gitian-build.sh -c  -s you@users.noreply.github.com linux
 ```
-
-* ` --no-cache` to not cache the code during checkout step
-
 
 ## License
 Copyright 2019 IOV SAS
