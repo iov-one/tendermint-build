@@ -1,5 +1,7 @@
 language: go
 
+dist: bionic
+
 services:
   - docker
 
@@ -7,6 +9,12 @@ addons:
   apt:
     packages:
       - docker-ce
+      - apt-cacher-ng
+
+cache:
+  directories:
+    - $TRAVIS_BUILD_DIR/.gitian-builder-cache
+    - /var/cache/apt-cacher-ng
 
 os:
   - linux
@@ -15,28 +23,39 @@ go:
   - tip # Go version is defined by the build container in the Dockerfile
 
 env:
-  - GORACE="halt_on_error=1"
-    SOURCE_VERSION=$(source ./build-version.txt && echo -n $SOURCE_VERSION)
-    SOURCE_REPO=$(source ./build-version.txt && echo -n $SOURCE_REPO)
-    BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10)
+  global:
+    - GORACE="halt_on_error=1"
+    - BUILD_TAG=$(source ./build-version.txt && echo -n $BUILD_TAG)
+    - BUILD_COMMIT=$(source ./build-version.txt && echo -n $BUILD_COMMIT)
+    - IMAGE_NAME="iov1/tendermint:${BUILD_TAG}"
+    - BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10) # random id
+    - VERSION=$(echo $BUILD_TAG | sed 's/^v//')
 
 script:
-  - docker build --pull --no-cache -t "iov1/tendermint:${BUILD_VERSION}" --build-arg source_version=${SOURCE_VERSION} --build-arg source_repo=${SOURCE_REPO} -f ./Dockerfile .
+- set -eo pipefail
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    release_latest=$( [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_TAG" == "" && "$TRAVIS_PULL_REQUEST_BRANCH" == "" ]] && echo "yes" || echo "no" );
+    release_tag=$( [[ "$TRAVIS_TAG" != "" ]] && echo "yes" || echo "no" );
 
-after_success:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_TAG" == "" ]] && [[ "$TRAVIS_PULL_REQUEST_BRANCH" == "" ]]; then
+    ./contrib/gitian-build.sh linux ;
+    tar -zxf $TRAVIS_BUILD_DIR/tendermint-build-linux/build/out/tendermint-${VERSION}-linux-amd64.tar.gz -C ${TRAVIS_BUILD_DIR} ;
+    docker build --pull  --file ${TRAVIS_BUILD_DIR}/Dockerfile --tag ${IMAGE_NAME} . ;
+
+    if [[ $release_latest == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:latest" ;
-    docker push "iov1/tendermint:latest";
+    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$BUILD_TAG-latest" ;
+    docker push "iov1/tendermint:$BUILD_TAG-latest";
     docker logout;
-    fi
-  # build the tagged image
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_TAG" != "" ]]; then
+    fi;
+
+    if [[ $release_tag == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$TRAVIS_TAG" ;
     docker push "iov1/tendermint:$TRAVIS_TAG";
     docker logout;
-    fi
+    fi;
+  fi;
+
 notifications:
   email: false
 
@@ -44,4 +63,18 @@ notifications:
 branches:
   only:
     - master
-    - /^v[0-9]+\.[0-9]+\.[0-9]+$/
+    - /^v[0-9]+\.[0-9]+\.[0-9]+-iov[0-9]+$/
+
+deploy:
+  provider: releases
+  api_key:
+    ${GITHUB_API_KEY}
+  file:
+    - ${TRAVIS_BUILD_DIR}/tendermint-build-linux/build/out/tendermint-${VERSION}-linux-amd64.tar.gz
+    - ${TRAVIS_BUILD_DIR}/tendermint-build-linux/build/out/src/tendermint-${VERSION}.tar.gz
+    - ${TRAVIS_BUILD_DIR}/tendermint-build-linux/result/tendermint-linux-res.yml
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+-iov[0-9]+$
+

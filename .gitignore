@@ -1,0 +1,3 @@
+tendermint-build-linux/
+.gitian-builder-cache/
+/tendermint
