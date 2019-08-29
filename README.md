@@ -1,15 +1,11 @@
-## Tendermint-build container
-Containerized build environemnt to create the docker artifact: 
-https://hub.docker.com/r/iov1/tendermint
-### Development
-* Build local binary
-```sh
-./contrib/gitian-build.sh linux
-```
-* Build and Sign
-```sh
-./contrib/gitian-build.sh -c  -s you@users.noreply.github.com linux
-```
+## Tendermint-build
+[Gitian](https://gitian.org) base build process for [Tendermint](https://github.com/tendermint/tendermint).
+
+#### Trigger new artifact build
+1. Update `./build-version.txt` file and set proper tag and commit hash.
+2. Do PR and let travisCI build it.
+3. Merge to master and Tag with `v0.31.5-iov1`. The first part is the Tendermint tag you are building and the second a iov counter that you can increase if you have to.
+4. Let TravisCI build the tagged version and automatically upload a release artifact to github and docker. 
 
 ## License
 Copyright 2019 IOV SAS

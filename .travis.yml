@@ -43,15 +43,15 @@ script:
 
     if [[ $release_latest == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:alex-latest" ;
-    docker push "iov1/tendermint:latest";
+    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$BUILD_TAG-latest" ;
+    docker push "iov1/tendermint:$BUILD_TAG-latest";
     docker logout;
     fi;
 
     if [[ $release_tag == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:alex-$TRAVIS_TAG" ;
-    docker push "iov1/tendermint:alex-$TRAVIS_TAG";
+    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$TRAVIS_TAG" ;
+    docker push "iov1/tendermint:$TRAVIS_TAG";
     docker logout;
     fi;
   fi;
@@ -63,7 +63,7 @@ notifications:
 branches:
   only:
     - master
-    - /^v[0-9]+\.[0-9]+\.[0-9]+$/
+    - /^v[0-9]+\.[0-9]+\.[0-9]+-iov[0-9]+$/
 
 deploy:
   provider: releases
@@ -76,5 +76,5 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$
+    condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+-iov[0-9]+$
 
