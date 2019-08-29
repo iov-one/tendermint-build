@@ -1,10 +1,15 @@
 language: go
 
-dist: xenial
+dist: bionic
 
 services:
   - docker
-  - apt-cacher-ng
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+      - apt-cacher-ng
 
 cache:
   directories:
