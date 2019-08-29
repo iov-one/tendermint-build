@@ -27,9 +27,9 @@ env:
     - GORACE="halt_on_error=1"
     - BUILD_TAG=$(source ./build-version.txt && echo -n $BUILD_TAG)
     - BUILD_COMMIT=$(source ./build-version.txt && echo -n $BUILD_COMMIT)
-    - IMAGE_NAME="iov1/tendermint:${BUILD_TAG}"
-    - BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10) # random id
+    - BUILD_VERSION=$(echo ${TRAVIS_COMMIT} | cut -c 1-10) # any unique id
     - VERSION=$(echo $BUILD_TAG | sed 's/^v//')
+    - IMAGE_NAME="iov1/tendermint:${BUILD_VERSION}"
 
 script:
 - set -eo pipefail
@@ -43,14 +43,14 @@ script:
 
     if [[ $release_latest == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$BUILD_TAG-latest" ;
-    docker push "iov1/tendermint:$BUILD_TAG-latest";
+    docker tag  ${IMAGE_NAME} "iov1/tendermint:${BUILD_TAG}-latest" ;
+    docker push "iov1/tendermint:${BUILD_TAG}-latest";
     docker logout;
     fi;
 
     if [[ $release_tag == "yes" ]]; then
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker tag  "iov1/tendermint:${BUILD_VERSION}" "iov1/tendermint:$TRAVIS_TAG" ;
+    docker tag ${IMAGE_NAME} "iov1/tendermint:$TRAVIS_TAG" ;
     docker push "iov1/tendermint:$TRAVIS_TAG";
     docker logout;
     fi;
